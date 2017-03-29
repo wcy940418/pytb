@@ -16,7 +16,6 @@ def draw_rect(image, rectangle, color, thickness=1):
 def draw_output(image, boxes, confidences, wait=1000):
 	img = (image * 255.0).astype(np.uint8)
 	picks = boxproc.post_process(boxes, confidences)
-	print picks
 	color_r = (0, 0, 255)
 	for box in picks:
 		draw_rect(img, box, color_r, 2)
@@ -25,7 +24,6 @@ def draw_output(image, boxes, confidences, wait=1000):
 
 def draw_matches(image, default_boxes, matches, anns, wait=1000):
 	img = (image * 255.0).astype(np.uint8)
-	print img.dtype
 	color_r = (0, 0, 255)
 	color_b = (255, 0, 0)
 	color_g = (0, 255, 0)

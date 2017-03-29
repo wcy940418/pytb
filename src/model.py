@@ -3,6 +3,7 @@ import numpy as np
 import basic_layer as bl
 import time
 from constants import *
+import os
 
 class TB:
 	def __init__(self, images, trainPhase, sess):

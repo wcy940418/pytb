@@ -67,12 +67,12 @@ if __name__ == '__main__':
 	while True:
 		t = time.time()
 		imgs, anns = train_loader.nextBatch(gConfig.trainBatchSize)
-		pred_labels, pred_locs, step = sess.run([tb.pred_labels, tb.pred_locs, global_step], feed_dict={tb.input: imgs, tb.trainPhase: False})
-		batch_value = [None for i in range(gConfig.trainBatchSize)]
+		pred_labels, pred_locs = sess.run([tb.pred_labels, tb.pred_locs], feed_dict={tb.input: imgs, tb.trainPhase: False})
+		batch_values = [None for i in range(gConfig.trainBatchSize)]
 		def build_match_boxes(batch):
 			matches = box_matcher.match_boxes(pred_labels[batch], anns[batch])
 			positives, negatives, tru_labels, true_locs = boxproc.prepare_feed(matches)
-			batch_value[batch] = (positives, negatives, tru_labels, true_locs)
+			batch_values[batch] = (positives, negatives, tru_labels, true_locs)
 			if batch == 0:
 				boxes, confidences = boxproc.format_output(pred_labels[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences)
@@ -81,16 +81,16 @@ if __name__ == '__main__':
 			build_match_boxes(batch)
 		positives, negatives, true_labels, true_locs = [np.stack(m) for m in zip(*batch_values)]
 
-		_, loss, step = sess.run([optimizer, loss.total_loss, global_step], feed_dict={
+		cost, _, step = sess.run([loss.total_loss, optimizer, global_step], feed_dict={
 											tb.input: imgs, 
 											tb.trainPhase: True, 
-											tb.positives: positives,
-											tb.negatives: negatives,
-											tb.true_labels: true_labels,
-											tb.true_locs: true_locs
+											loss.positives: positives,
+											loss.negatives: negatives,
+											loss.true_labels: true_labels,
+											loss.true_locs: true_locs
 											})
 		t = time.time() - t
-		print("step:%d, loss: %f, time elapse: %s secs" % (loss, step, t))
+		print("step:%d, loss: %f, time elapse: %.2f secs" % (step, cost, t))
 		if step >= gConfig.maxIteration:
 			print("%d training has completed" % gConfig.maxIteration)
 			tb.saveModel(gConfig.modelDir, step)
