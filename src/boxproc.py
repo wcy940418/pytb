@@ -173,7 +173,7 @@ def format_output(pred_labels, pred_locs):
 					w = default[2] * np.exp(diffs[2])
 					h = default[3] * np.exp(diffs[3])
 					boxes[layer][x][y][i] = [c_x, c_y, w, h]
-					# convert output predicted label to 
+					# convert output predicted label
 					logits = pred_labels[index]
 					max_logits = np.amax(np.exp(logits) / np.sum(np.exp(logits)))
 					max_logits_label = np.argmax(logits)
@@ -187,8 +187,8 @@ def post_process(boxes, confidences, min_conf=0.01, nms=0.45):
 	raw_boxes = []
 	for indices, max_logits, max_logits_label in  confidences:
 		if max_logits_label != classes and max_logits >= min_conf:
-			raw_boxes.append(boxes[indices[0]][indices[1]][indices[2]][indices[3]])
-			print boxes[indices[0]][indices[1]][indices[2]][indices[3]]
+			if check_limits(boxes[indices[0]][indices[1]][indices[2]][indices[3]]):
+				raw_boxes.append(boxes[indices[0]][indices[1]][indices[2]][indices[3]])
 	raw_boxes = np.asarray(raw_boxes)
 	return non_max_suppression_fast(raw_boxes, nms)
 
