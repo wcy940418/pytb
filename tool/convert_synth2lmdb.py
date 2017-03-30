@@ -53,6 +53,7 @@ def createDataset(outputPath, configFile, imgDir):
 	cache = {}
 	cnt = 0
 	data = sio.loadmat(configFile)
+	print "mat file loaded"
 	n = data['imnames'][0].shape[0]
 	img_path = data['imnames'][0]
 	wordBB = data['wordBB'][0]
