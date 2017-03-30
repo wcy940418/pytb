@@ -30,10 +30,10 @@ def bbProcess(bb):
 	assert x_top_left.shape[0] == x_bottom_right.shape[0] and x_top_left.shape[0] == y_top_left.shape[0] and x_top_left.shape[0] == y_bottom_right.shape[0]
 	box = []
 	for x1, y1, x2, y2 in zip(x_top_left, y_top_left, x_bottom_right, y_bottom_right):
-		x = x1
-		y = y1
-		w = x2 - x1
-		h = y2 - y1
+		x = int(x1)
+		y = int(y1)
+		w = int(x2 - x1)
+		h = int(y2 - y1)
 		box.append(([x, y, w, h], 0))
 	return box
 
