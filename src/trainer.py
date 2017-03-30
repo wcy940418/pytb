@@ -74,7 +74,7 @@ if __name__ == '__main__':
 			matches = box_matcher.match_boxes(pred_labels[batch], anns[batch])
 			positives, negatives, tru_labels, true_locs = boxproc.prepare_feed(matches)
 			batch_values[batch] = (positives, negatives, tru_labels, true_locs)
-			if batch == 0 && gConfig.display:
+			if batch == 0 and gConfig.display:
 				boxes, confidences = boxproc.format_output(pred_labels[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences)
 				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch])
