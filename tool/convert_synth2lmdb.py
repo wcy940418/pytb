@@ -4,11 +4,12 @@ import os
 import numpy
 import json
 import sys
+import cv2
 
 def checkImageIsValid(imagePath):
 	if imagePath is None:
 		return False
-	img = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
+	img = cv2.imread(imagePath, cv2.IMREAD_COLOR)
 	if img is None:
 		return False
 	imgH, imgW = img.shape[0], img.shape[1]
