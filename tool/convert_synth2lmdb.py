@@ -3,6 +3,7 @@ import lmdb
 import os
 import numpy
 import json
+import sys
 
 def checkImageIsValid(imagePath):
 	if imagePath is None:
