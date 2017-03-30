@@ -27,8 +27,10 @@ def bbProcess(bb):
 	x_bottom_right = bb[0][2]
 	y_top_left = bb[1][0]
 	y_bottom_right = bb[1][2]
-	assert x_top_left.shape[0] == x_bottom_right.shape[0] and x_top_left.shape[0] == y_top_left.shape[0] and x_top_left.shape[0] == y_bottom_right.shape[0]
 	box = []
+	if len(x_top_left.shape) == 0 and len(x_bottom_right.shape) == 0 and len(y_top_left.shape) == 0 and len(y_bottom_right.shape) == 0:
+		return box
+	assert x_top_left.shape[0] == x_bottom_right.shape[0] and x_top_left.shape[0] == y_top_left.shape[0] and x_top_left.shape[0] == y_bottom_right.shape[0]
 	for x1, y1, x2, y2 in zip(x_top_left, y_top_left, x_bottom_right, y_bottom_right):
 		x = int(x1)
 		y = int(y1)
