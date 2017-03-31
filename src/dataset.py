@@ -25,11 +25,11 @@ class SynthLmdb:
 		imageList = []
 		bbList = []
 		with self.env.begin() as txn:
-			for i in range(batchSize):
+			for i in range(batches):
 				idx = randomIndex[i]
 				imageKey = 'img-%08d' % idx
 				bbKey = 'bb-%08d' % idx
-				imagePath = txn.get(imageKey)
+				imagePath = os.path.join(self.dataDirPath, txn.get(imageKey))
 				bb = json.loads(txn.get(bbKey))
 				imageList.append(imagePath)
 				bbList.append(bb)
