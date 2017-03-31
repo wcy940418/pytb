@@ -35,8 +35,6 @@ class SynthLmdb:
 				bbList.append(bb)
 		for imagePath, bb in zip(imageList, bbList):
 			filePath = os.path.join(self.dataDirPath, imagePath)
-			print filePath
-			print bb
 			img = cv2.imread(filePath, cv2.IMREAD_COLOR)
 			resized = cv2.resize(img, (imgW, imgH))
 			resized = np.multiply(resized, 1.0/255.0)

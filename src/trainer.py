@@ -2,6 +2,7 @@ import tensorflow as tf
 from matcher import Matcher
 from model import TB, TB_Loss
 import svt_data_loader as sLoader
+import dataset
 import constants as c
 from constants import layer_boxes, classes, image_size
 import numpy as np
@@ -16,15 +17,17 @@ import os
 
 class Conf:
 	def __init__(self):
-		self.trainBatchSize = 8
+		self.trainBatchSize = 16
 		self.testBatchSize = 2
 		self.maxIteration = 2000000
 		self.displayInterval = 100
 		self.evalInterval = 50
 		self.testInterval = 1000
-		self.saveInterval = 100
+		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
-		self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
+		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
+		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
+		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
 		self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
 		self.display = False
 
@@ -49,7 +52,8 @@ if __name__ == '__main__':
 	loss = TB_Loss(tb.pred_labels, tb.pred_locs, true_labels_ph, true_locs_ph, positives_ph, negatives_ph)
 	ckpt = utility.checkPointLoader(gConfig.modelDir)
 	box_matcher = Matcher()
-	train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
+	# train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
+	train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
 	def signal_handler(signal, frame):
 		print('You pressed Ctrl+C!')
 		tb.saveModel(gConfig.modelDir, step)
@@ -67,6 +71,7 @@ if __name__ == '__main__':
 		step = sess.run([global_step])
 	while True:
 		t = time.time()
+		start_time = t
 		imgs, anns = train_loader.nextBatch(gConfig.trainBatchSize)
 		pred_labels, pred_locs = sess.run([tb.pred_labels, tb.pred_locs], feed_dict={tb.input: imgs, tb.trainPhase: False})
 		batch_values = [None for i in range(gConfig.trainBatchSize)]
@@ -90,8 +95,10 @@ if __name__ == '__main__':
 											loss.true_labels: true_labels,
 											loss.true_locs: true_locs
 											})
-		t = time.time() - t
-		print("step:%d, loss: %f, time elapse: %.2f secs" % (step, cost, t))
+		if step != 0 and step % gConfig.displayInterval == 0:
+			t = time.time() - t
+			total_time = time.time() - start_time
+			print("step:%d, loss: %f, step time usage: %.2f, time elapse: %.2f secs" % (step, cost, t, total_time))
 		if step >= gConfig.maxIteration:
 			print("%d training has completed" % gConfig.maxIteration)
 			tb.saveModel(gConfig.modelDir, step)
