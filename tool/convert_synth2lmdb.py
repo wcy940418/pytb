@@ -32,10 +32,10 @@ def bbProcess(bb):
 		return box
 	assert x_top_left.shape[0] == x_bottom_right.shape[0] and x_top_left.shape[0] == y_top_left.shape[0] and x_top_left.shape[0] == y_bottom_right.shape[0]
 	for x1, y1, x2, y2 in zip(x_top_left, y_top_left, x_bottom_right, y_bottom_right):
-		x = int(x1)
-		y = int(y1)
-		w = int(x2 - x1)
-		h = int(y2 - y1)
+		x = max(int(x1), 0)
+		y = max(int(y1), 0)
+		w = max(int(x2 - x1), 0)
+		h = max(int(y2 - y1), 0)
 		box.append(([x, y, w, h], 0))
 	return box
 
@@ -62,7 +62,7 @@ def createDataset(outputPath, configFile, imgDir):
 	for i in range(n):
 		image_path = img_path[i][0]
 		img = os.path.join(imgDir, image_path)
-		if checkImageIsValid(img) :
+		if True:
 			path_key = "img-%08d" % cnt
 			cache[path_key] = str(image_path)
 			bb_key = "bb-%08d" % cnt
