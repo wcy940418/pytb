@@ -1,6 +1,6 @@
 import lmdb
 import os
-import numpy
+import numpy as np
 import json
 import sys
 import cv2
