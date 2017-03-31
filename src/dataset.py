@@ -4,6 +4,7 @@ import numpy
 import json
 import sys
 import cv2
+import random
 
 class SynthLmdb:
 	def __init__(self, lmdbPath,dataDirPath):
