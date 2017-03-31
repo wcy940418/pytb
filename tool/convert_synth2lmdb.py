@@ -64,7 +64,7 @@ def createDataset(outputPath, configFile, imgDir):
 		img = os.path.join(imgDir, image_path)
 		if checkImageIsValid(img) :
 			path_key = "img-%08d" % cnt
-			cache[path_key] = image_path
+			cache[path_key] = str(image_path)
 			bb_key = "bb-%08d" % cnt
 			cache[bb_key] = json.dumps(bbProcess(wordBB[i]))
 			cnt += 1

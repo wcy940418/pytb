@@ -29,7 +29,7 @@ class SynthLmdb:
 				idx = randomIndex[i]
 				imageKey = 'img-%08d' % idx
 				bbKey = 'bb-%08d' % idx
-				imagePath = os.path.join(self.dataDirPath, txn.get(imageKey))
+				imagePath = txn.get(imageKey)
 				bb = json.loads(txn.get(bbKey))
 				imageList.append(imagePath)
 				bbList.append(bb)
