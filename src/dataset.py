@@ -19,7 +19,7 @@ class SynthLmdb:
 	def nextBatch(self, batches):
 		imgH = 300
 		imgW = 300
-		randomIndex = random.sample(range(len(datalist)), batches)
+		randomIndex = random.sample(range(self.nSamples), batches)
 		images = []
 		anns = []
 		imageList = []
