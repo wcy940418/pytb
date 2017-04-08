@@ -30,7 +30,9 @@ class Conf:
 		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
 		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
 		self.display = False
+		self.saveSnapShot = True
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
+		self.snapShotPath = os.path.abspath(os.path.join('..', 'model', 'snapShot'))
 
 if __name__ == '__main__':
 	gConfig = Conf()
@@ -88,6 +90,10 @@ if __name__ == '__main__':
 				boxes, confidences = boxproc.format_output(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences)
 				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch])
+			if batch == 0 and gConfig.saveSnapShot:
+				boxes, confidences = boxproc.format_output(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], pred_locs[batch])
+				draw.draw_output(imgs[batch], boxes, confidences, mode='save', step=step, path=gConfig.snapShotPath)
+				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch], mode='save', step=step, path=gConfig.snapShotPath)
 		for batch in range(gConfig.trainBatchSize):
 			build_match_boxes(batch)
 		positives, negatives, true_labels, true_locs = [np.stack(m) for m in zip(*batch_values)]
