@@ -4,15 +4,23 @@ from constants import layer_boxes, classes, negposratio
 from boxproc import center2cornerbox, calc_jaccard
 import numpy as np
 
-def get_top_confidences(pred_labels):
-	confidences = []
+def softmax(x):
+	mx = np.max(x)
+	e_x = np.exp(x - mx)
+	return e_x/e_x.sum()
 
-	for index in range(pred_labels.shape[0]):
-		logits = pred_labels[index]
-		probs = np.exp(logits) / np.sum(np.exp(logits))
-		top_probs = np.amax(probs)
-		top_probs_label = np.argmax(probs)
-		confidences.append((index, top_probs, top_probs_label))
+def get_top_confidences(softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index):
+	# confidences = []
+	assert softmaxed_pred_labels_max_prob.shape[0] == softmaxed_pred_labels_max_index.shape[0]
+	confidences = [(index, top_probs, top_probs_label) for index, top_probs, top_probs_label in \
+	zip(range(softmaxed_pred_labels_max_prob.shape[0]), softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index)]
+	# for index in range(pred_labels.shape[0]):
+	# 	logits = pred_labels[index]
+	# 	# probs = np.exp(logits) / np.sum(np.exp(logits))
+	# 	probs = softmax(logits)
+	# 	top_probs = np.amax(probs)
+	# 	top_probs_label = np.argmax(probs)
+	# 	confidences.append((index, top_probs, top_probs_label))
 	top_confidences = sorted(confidences, key=lambda x: x[1], reverse=True)
 	return top_confidences
 
@@ -25,7 +33,7 @@ class Matcher:
 					for i in range(layer_boxes[o_i]):
 						self.index2indices.append([o_i, x, y, i])
 
-	def match_boxes(self, pred_labels, anns):
+	def match_boxes(self, softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index, anns):
 		matches = [[[[None for i in range(c.layer_boxes[o])] for y in range(c.out_shapes[o][1])] for y in range(c.out_shapes[o][2])]
 				 for o in range(len(layer_boxes))]
 		positive_count = 0
@@ -60,7 +68,7 @@ class Matcher:
 		negative_max = positive_count * negposratio
 		negative_count = 0
 
-		confidences = get_top_confidences(pred_labels)
+		confidences = get_top_confidences(softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index)
 
 		for index, top_probs, top_probs_label in confidences:
 			indices = self.index2indices[index]

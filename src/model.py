@@ -25,8 +25,8 @@ class TB:
 				images = images * 255.0
 				blue, green, red = tf.split(images, 3, 3)
 				images = tf.concat([blue - VGG_MEAN['B'], green - VGG_MEAN['G'], red - VGG_MEAN['R']], 3)
-				assert images.shape[1:] == [300, 300, 3]
 				self.imgs = images
+				tf.summary.image('input image', self.imgs, 3)
 			self.conv1_1 = bl.conv2d(self.imgs, 3, 64, name='conv1_1')#300
 			self.conv1_2 = bl.conv2d(self.conv1_1, 64, 64, name='conv1_2')#300
 			self.pool1 = bl.maxPool(self.conv1_2, name='pool1')#150
@@ -58,6 +58,7 @@ class TB:
 		with tf.name_scope('tb_extension') as scope:
 			c_ = classes + 1
 			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1')
+			tf.summary.histogram('out1', self.out1)
 			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2')
 			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3')
 			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4')
@@ -79,6 +80,9 @@ class TB:
 		self.outputs = outputs
 		self.pred_labels = pred_labels
 		self.pred_locs = pred_locs
+		self.softmaxed_pred_labels = tf.nn.softmax(pred_labels)
+		self.softmaxed_pred_labels_max_prob = tf.reduce_max(self.softmaxed_pred_labels, axis=-1)
+		self.softmaxed_pred_labels_max_index = tf.argmax(self.softmaxed_pred_labels, axis=-1)
 	def loadModel(self, modelFile):
 		saver = tf.train.Saver()
 		saver.restore(self.sess, modelFile)
@@ -101,12 +105,16 @@ class TB_Loss():
 		self.positives = positives
 		self.negatives = negatives
 		posandnegs = self.positives + self.negatives
+		positive_sum = tf.reduce_sum(self.positives, reduction_indices=1)
 		class_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.pred_labels, labels=self.true_labels) * posandnegs
-		class_loss = tf.reduce_sum(class_loss, reduction_indices=1) / tf.reduce_sum(self.positives, reduction_indices=1)
+		class_loss = tf.reduce_sum(class_loss, reduction_indices=1)
 		loc_loss = tf.reduce_sum(smooth_l1(self.pred_locs - self.true_locs), reduction_indices=2) * positives
-		loc_loss = tf.reduce_sum(loc_loss, reduction_indices=1) / tf.reduce_sum(self.positives, reduction_indices=1)
-		total_loss = tf.reduce_mean(class_loss + loc_loss)
-		self.total_loss = total_loss
+		loc_loss = tf.reduce_sum(loc_loss, reduction_indices=1)
+		total_loss = (class_loss + loc_loss) / positive_sum
+		tf.summary.histogram('loss_seprate', total_loss)
+		condition = tf.equal(positive_sum, 0)
+		self.total_loss = tf.reduce_mean(tf.where(condition, positive_sum, total_loss))
+		tf.summary.scalar('loss', self.total_loss)
 
 
 

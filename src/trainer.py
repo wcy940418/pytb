@@ -17,10 +17,10 @@ import os
 
 class Conf:
 	def __init__(self):
-		self.trainBatchSize = 16
+		self.trainBatchSize = 8
 		self.testBatchSize = 2
 		self.maxIteration = 2000000
-		self.displayInterval = 100
+		self.displayInterval = 1
 		self.evalInterval = 50
 		self.testInterval = 1000
 		self.saveInterval = 5000
@@ -28,8 +28,9 @@ class Conf:
 		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
 		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
 		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
-		self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
+		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
 		self.display = False
+		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
 
 if __name__ == '__main__':
 	gConfig = Conf()
@@ -50,6 +51,8 @@ if __name__ == '__main__':
 	true_locs_ph = tf.placeholder(tf.float32, [None, total_boxes, 4])
 	# Build loss functions
 	loss = TB_Loss(tb.pred_labels, tb.pred_locs, true_labels_ph, true_locs_ph, positives_ph, negatives_ph)
+	merged = tf.summary.merge_all()
+	train_writer = tf.summary.FileWriter(gConfig.trainLogPath, sess.graph)
 	ckpt = utility.checkPointLoader(gConfig.modelDir)
 	box_matcher = Matcher()
 	# train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
@@ -69,25 +72,27 @@ if __name__ == '__main__':
 	else:
 		tb.loadModel(ckpt)
 		step = sess.run([global_step])
+	start_time = time.time()
+	t = start_time
 	while True:
-		t = time.time()
-		start_time = t
 		imgs, anns = train_loader.nextBatch(gConfig.trainBatchSize)
-		pred_labels, pred_locs = sess.run([tb.pred_labels, tb.pred_locs], feed_dict={tb.input: imgs, tb.trainPhase: False})
+		softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index, pred_locs \
+			= sess.run([tb.softmaxed_pred_labels_max_prob, tb.softmaxed_pred_labels_max_index, tb.pred_locs], \
+			feed_dict={tb.input: imgs, tb.trainPhase: False})
 		batch_values = [None for i in range(gConfig.trainBatchSize)]
 		def build_match_boxes(batch):
-			matches = box_matcher.match_boxes(pred_labels[batch], anns[batch])
+			matches = box_matcher.match_boxes(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], anns[batch])
 			positives, negatives, tru_labels, true_locs = boxproc.prepare_feed(matches)
 			batch_values[batch] = (positives, negatives, tru_labels, true_locs)
 			if batch == 0 and gConfig.display:
-				boxes, confidences = boxproc.format_output(pred_labels[batch], pred_locs[batch])
+				boxes, confidences = boxproc.format_output(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences)
 				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch])
 		for batch in range(gConfig.trainBatchSize):
 			build_match_boxes(batch)
 		positives, negatives, true_labels, true_locs = [np.stack(m) for m in zip(*batch_values)]
 
-		cost, _, step = sess.run([loss.total_loss, optimizer, global_step], feed_dict={
+		cost, _, step, summary = sess.run([loss.total_loss, optimizer, global_step, merged], feed_dict={
 											tb.input: imgs, 
 											tb.trainPhase: True, 
 											loss.positives: positives,
@@ -96,9 +101,11 @@ if __name__ == '__main__':
 											loss.true_locs: true_locs
 											})
 		if step != 0 and step % gConfig.displayInterval == 0:
-			t = time.time() - t
+			t_step = time.time() - t
+			t = time.time()
 			total_time = time.time() - start_time
-			print("step:%d, loss: %f, step time usage: %.2f, time elapse: %.2f secs" % (step, cost, t, total_time))
+			train_writer.add_summary(summary, step)
+			print("step:%d, loss: %f, step time usage: %.2f, time elapse: %.2f secs" % (step, cost, t_step, total_time))
 		if step >= gConfig.maxIteration:
 			print("%d training has completed" % gConfig.maxIteration)
 			tb.saveModel(gConfig.modelDir, step)

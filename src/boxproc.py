@@ -157,7 +157,7 @@ def check_limits(x):
 		return True
 	return False
 # center
-def format_output(pred_labels, pred_locs):
+def format_output(softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index, pred_locs):
 	boxes = [[[[None for i in range(layer_boxes[layer])] for x in range(c.out_shapes[layer][2])] for y in range(c.out_shapes[layer][1])] for layer in range(len(layer_boxes))]
 	index = 0
 	confidences = []
@@ -174,9 +174,11 @@ def format_output(pred_labels, pred_locs):
 					h = default[3] * np.exp(diffs[3])
 					boxes[layer][x][y][i] = [c_x, c_y, w, h]
 					# convert output predicted label
-					logits = pred_labels[index]
-					max_logits = np.amax(np.exp(logits) / np.sum(np.exp(logits)))
-					max_logits_label = np.argmax(logits)
+					# logits = pred_labels[index]
+					# max_logits = np.amax(np.exp(logits) / np.sum(np.exp(logits)))
+					# max_logits_label = np.argmax(logits)
+					max_logits = softmaxed_pred_labels_max_prob[index]
+					max_logits_label = softmaxed_pred_labels_max_index[index]
 					indices = [layer, x, y, i]
 					info = (indices, max_logits, max_logits_label)
 					confidences.append(info)
