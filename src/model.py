@@ -111,9 +111,10 @@ class TB_Loss():
 		loc_loss = tf.reduce_sum(smooth_l1(self.pred_locs - self.true_locs), reduction_indices=2) * positives
 		loc_loss = tf.reduce_sum(loc_loss, reduction_indices=1)
 		total_loss = (class_loss + loc_loss) / positive_sum
-		tf.summary.histogram('loss_seprate', total_loss)
 		condition = tf.equal(positive_sum, 0)
-		self.total_loss = tf.reduce_mean(tf.where(condition, positive_sum, total_loss))
+		total_loss_wo_inf = tf.where(condition, positive_sum, total_loss)
+		tf.summary.histogram('loss_seperate', total_loss_wo_inf)
+		self.total_loss = tf.reduce_mean(total_loss_wo_inf)
 		tf.summary.scalar('loss', self.total_loss)
 
 
