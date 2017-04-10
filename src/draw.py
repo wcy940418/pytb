@@ -25,7 +25,7 @@ def draw_output(image, boxes, confidences, wait=1000, mode='display', step=0, pa
 		cv2.waitKey(wait)
 	elif mode == 'save':
 		write_path = os.path.join(path, str(step) + '_output.jpg')
-		print write_path
+		# print write_path
 		cv2.imwrite(write_path, img)
 
 def draw_matches(image, default_boxes, matches, anns, wait=1000, mode='display', step=0, path=None):
@@ -52,5 +52,5 @@ def draw_matches(image, default_boxes, matches, anns, wait=1000, mode='display',
 		cv2.waitKey(wait)
 	elif mode == 'save':
 		write_path = os.path.join(path, str(step) + '_matches.jpg')
-		print write_path
+		# print write_path
 		cv2.imwrite(write_path, img)

@@ -55,7 +55,7 @@ class SVT:
 		return (images, anns)
 
 if __name__ == '__main__':
-	loader = SVT('./svt1/train.xml', './svt1/test.xml')
+	loader = SVT('../data/svt1/train.xml', '../data/svt1/test.xml')
 	train_img, train_anns = loader.nextBatch(5,'test')
 	for img, anns in zip(train_img, train_anns):
 		print anns
