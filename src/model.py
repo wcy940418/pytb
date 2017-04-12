@@ -111,7 +111,6 @@ class TB_Loss():
 		total_loss = (class_loss + loc_loss) / positive_sum
 		condition = tf.equal(positive_sum, 0)
 		total_loss_wo_inf = tf.where(condition, positive_sum, total_loss)
-		tf.summary.histogram('loss_seperate', total_loss_wo_inf)
 		self.total_loss = tf.reduce_mean(total_loss_wo_inf)
 		tf.summary.scalar('loss', self.total_loss)
 
