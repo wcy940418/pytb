@@ -56,7 +56,6 @@ class TB:
 		with tf.name_scope('tb_extension') as scope:
 			c_ = classes + 1
 			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1')
-			tf.summary.histogram('out1', self.out1)
 			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[1] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2')
 			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[2] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3')
 			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[3] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4')
