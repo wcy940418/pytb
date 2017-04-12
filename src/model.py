@@ -68,7 +68,7 @@ class TB:
 		for i, out in zip(range(len(outputs)), outputs):
 			w = out.get_shape().as_list()[2]
 			h = out.get_shape().as_list()[1]
-			out = tf.transpose(out, perm=[0, 2, 1, 3])
+			# out = tf.transpose(out, perm=[0, 2, 1, 3])
 			out_reshaped = tf.reshape(out, [-1,w*h*layer_boxes[i], c_ + 4])
 			outlist.append(out_reshaped)
 		formatted_outs = tf.concat(outlist, 1)

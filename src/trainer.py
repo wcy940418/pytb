@@ -20,9 +20,9 @@ class Conf:
 		self.trainBatchSize = 8
 		self.testBatchSize = 2
 		self.maxIteration = 60000
-		self.displayInterval = 10
+		self.displayInterval = 1
 		self.evalInterval = 50
-		self.testInterval = 100
+		self.testInterval = 1
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
 		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
