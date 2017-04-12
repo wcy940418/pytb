@@ -19,13 +19,11 @@ class TB:
 
 	def initialVGGLayers(self):
 		with tf.name_scope('VGG16') as scope:
-			VGG_MEAN = {'R': 123.68, 'G': 116.779, 'B': 103.939}
 			with tf.name_scope('preprocess') as scope:
 				images = tf.reshape(self.input, [-1, 300, 300, 3])
 				images = images * 255.0
-				blue, green, red = tf.split(images, 3, 3)
-				images = tf.concat([blue - VGG_MEAN['B'], green - VGG_MEAN['G'], red - VGG_MEAN['R']], 3)
-				self.imgs = images
+				mean = tf.constant([103.939, 116.779, 123.68], dtype=tf.float32, shape=[1, 1, 1, 3], name='img_mean')
+				self.imgs = images - mean
 				tf.summary.image('input image', self.imgs, 3)
 			self.conv1_1 = bl.conv2d(self.imgs, 3, 64, name='conv1_1')#300
 			self.conv1_2 = bl.conv2d(self.conv1_1, 64, 64, name='conv1_2')#300
@@ -59,11 +57,11 @@ class TB:
 			c_ = classes + 1
 			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1')
 			tf.summary.histogram('out1', self.out1)
-			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2')
-			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3')
-			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4')
-			self.out5 = bl.conv2d(self.conv10_2, 256, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out5')
-			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,1], name='out6')
+			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[1] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2')
+			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[2] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3')
+			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[3] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4')
+			self.out5 = bl.conv2d(self.conv10_2, 256, layer_boxes[4] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out5')
+			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[5] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,1], name='out6')
 	def initialOutputs(self):
 		c_ = classes + 1
 		outputs = [self.out1, self.out2, self.out3, self.out4, self.out5, self.out6]
@@ -71,6 +69,7 @@ class TB:
 		for i, out in zip(range(len(outputs)), outputs):
 			w = out.get_shape().as_list()[2]
 			h = out.get_shape().as_list()[1]
+			out = tf.transpose(out, perm=[0, 2, 1, 3])
 			out_reshaped = tf.reshape(out, [-1,w*h*layer_boxes[i], c_ + 4])
 			outlist.append(out_reshaped)
 		formatted_outs = tf.concat(outlist, 1)

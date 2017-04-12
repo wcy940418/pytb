@@ -19,10 +19,10 @@ class Conf:
 	def __init__(self):
 		self.trainBatchSize = 8
 		self.testBatchSize = 2
-		self.maxIteration = 2000000
-		self.displayInterval = 1
+		self.maxIteration = 60000
+		self.displayInterval = 10
 		self.evalInterval = 50
-		self.testInterval = 1000
+		self.testInterval = 100
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
 		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 	# Start a new session
 	sess = tf.InteractiveSession()
 	# Declare placeholders for graph
-	images = tf.placeholder("float", [None, image_size, image_size, 3])
+	images = tf.placeholder(tf.float32, [None, image_size, image_size, 3])
 	trainPhase = tf.placeholder(tf.bool)
 	# Build graph
 	tb = TB(images, trainPhase, sess)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 		step = 0
 	else:
 		tb.loadModel(ckpt)
-		step = sess.run([global_step])
+		step = sess.run(global_step)
 	start_time = time.time()
 	t = start_time
 	while True:
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 			= sess.run([tb.softmaxed_pred_labels_max_prob, tb.softmaxed_pred_labels_max_index, tb.pred_locs], \
 			feed_dict={tb.input: imgs, tb.trainPhase: False})
 		batch_values = [None for i in range(gConfig.trainBatchSize)]
-		def build_match_boxes(batch):
+		def build_match_boxes(batch, step, snapShotInterval):
 			matches = box_matcher.match_boxes(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], anns[batch])
 			positives, negatives, tru_labels, true_locs = boxproc.prepare_feed(matches)
 			batch_values[batch] = (positives, negatives, tru_labels, true_locs)
@@ -90,12 +90,12 @@ if __name__ == '__main__':
 				boxes, confidences = boxproc.format_output(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences)
 				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch])
-			if batch == 0 and gConfig.saveSnapShot:
+			if batch == 0 and gConfig.saveSnapShot and step != 0 and step % snapShotInterval == 0:
 				boxes, confidences = boxproc.format_output(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], pred_locs[batch])
 				draw.draw_output(imgs[batch], boxes, confidences, mode='save', step=step, path=gConfig.snapShotPath)
 				draw.draw_matches(imgs[batch], c.defaults, matches, anns[batch], mode='save', step=step, path=gConfig.snapShotPath)
 		for batch in range(gConfig.trainBatchSize):
-			build_match_boxes(batch)
+			build_match_boxes(batch, step, gConfig.testInterval)
 		positives, negatives, true_labels, true_locs = [np.stack(m) for m in zip(*batch_values)]
 
 		cost, _, step, summary = sess.run([loss.total_loss, optimizer, global_step, merged], feed_dict={
