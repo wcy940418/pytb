@@ -193,6 +193,7 @@ def post_process(boxes, confidences, min_conf=0.01, nms=0.45):
 				raw_boxes.append(boxes[indices[0]][indices[1]][indices[2]][indices[3]])
 	raw_boxes = np.asarray(raw_boxes)
 	return non_max_suppression_fast(raw_boxes, nms)
+	return raw_boxes
 
 def prepare_feed(matches):
 	positives_list = []

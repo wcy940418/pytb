@@ -19,7 +19,7 @@ def draw_output(image, boxes, confidences, wait=1000, mode='display', step=0, pa
 	picks = boxproc.post_process(boxes, confidences)
 	color_r = (0, 0, 255)
 	for box in picks:
-		draw_rect(img, box, color_r, 2)
+		draw_rect(img, box, color_r, 1)
 	if mode == 'display':
 		cv2.imshow("outputs", img)
 		cv2.waitKey(wait)

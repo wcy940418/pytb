@@ -29,15 +29,15 @@ class Conf:
 		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
 		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
 		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
-		self.display = False
-		self.saveSnapShot = True
+		self.display = True
+		self.saveSnapShot = False
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
 		self.snapShotPath = os.path.abspath(os.path.join('..', 'model', 'snapShot'))
 
 if __name__ == '__main__':
 	gConfig = Conf()
 	# Start a new session
-	sess = tf.InteractiveSession()
+	sess = tf.Session()
 	# Declare placeholders for graph
 	images = tf.placeholder(tf.float32, [None, image_size, image_size, 3])
 	trainPhase = tf.placeholder(tf.bool)
