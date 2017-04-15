@@ -34,15 +34,15 @@ def draw_matches(image, default_boxes, matches, anns, wait=1000, mode='display',
 	color_b = (255, 0, 0)
 	color_g = (0, 255, 0)
 	for layer in range(len(layer_boxes)):
-		for x in range(c.out_shapes[layer][2]):
-			for y in range(c.out_shapes[layer][1]):
+		for y in range(c.out_shapes[layer][1]):
+			for x in range(c.out_shapes[layer][2]):
 				for i in range(layer_boxes[layer]):
-					match = matches[layer][x][y][i]
+					match = matches[layer][y][x][i]
 					if match == -1:
-						coord = boxproc.center2cornerbox(default_boxes[layer][x][y][i])
+						coord = boxproc.center2cornerbox(default_boxes[layer][y][x][i])
 						draw_rect(img, coord, color_b)
 					elif isinstance(match, tuple):
-						coord = boxproc.center2cornerbox(default_boxes[layer][x][y][i])
+						coord = boxproc.center2cornerbox(default_boxes[layer][y][x][i])
 						draw_rect(img, coord, color_r)
 
 	for (gt_box, box_id) in anns:

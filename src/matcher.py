@@ -28,14 +28,13 @@ class Matcher:
 	def __init__(self):
 		self.index2indices = []
 		for o_i in range(len(layer_boxes)):
-			for x in range(c.out_shapes[o_i][2]):
-				for y in range(c.out_shapes[o_i][1]):
+			for y in range(c.out_shapes[o_i][1]):
+				for x in range(c.out_shapes[o_i][2]):
 					for i in range(layer_boxes[o_i]):
-						self.index2indices.append([o_i, x, y, i])
+						self.index2indices.append([o_i, y, x, i])
 
 	def match_boxes(self, softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index, anns):
-		matches = [[[[None for i in range(c.layer_boxes[o])] for y in range(c.out_shapes[o][1])] for y in range(c.out_shapes[o][2])]
-				 for o in range(len(layer_boxes))]
+		matches = [[[[None for i in range(c.layer_boxes[o])] for x in range(c.out_shapes[o][2])] for y in range(c.out_shapes[o][1])] for o in range(len(layer_boxes))]
 		positive_count = 0
 
 		for index, (gt_box, box_id) in zip(range(len(anns)), anns):
@@ -51,13 +50,13 @@ class Matcher:
 				for y in range(y1, y2):
 					for x in range(x1, x2):
 						for i in range(layer_boxes[o]):
-							box = c.defaults[o][x][y][i]
+							box = c.defaults[o][y][x][i]
 							jacc = calc_jaccard(gt_box, center2cornerbox(box)) #gt_box is corner, box is center-based so convert
 							if jacc >= 0.5:
-								matches[o][x][y][i] = (gt_box, box_id)
+								matches[o][y][x][i] = (gt_box, box_id)
 								positive_count += 1
 							if jacc > top_match[1]:
-								top_match = ([o, x, y, i], jacc)
+								top_match = ([o, y, x, i], jacc)
 
 			top_box = top_match[0]
 			#if box's jaccard is <0.5 but is the best
@@ -71,13 +70,10 @@ class Matcher:
 		confidences = get_top_confidences(softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index)
 
 		for index, top_probs, top_probs_label in confidences:
+			if negative_count >= negative_max:
+				break
 			indices = self.index2indices[index]
-
 			if matches[indices[0]][indices[1]][indices[2]][indices[3]] is None and top_probs_label != classes:
 				matches[indices[0]][indices[1]][indices[2]][indices[3]] = -1
 				negative_count += 1
-
-				if negative_count >= negative_max:
-					break
-
 		return matches

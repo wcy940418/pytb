@@ -20,17 +20,17 @@ class Conf:
 		self.trainBatchSize = 8
 		self.testBatchSize = 2
 		self.maxIteration = 60000
-		self.displayInterval = 1
+		self.displayInterval = 10
 		self.evalInterval = 50
-		self.testInterval = 1
+		self.testInterval = 1000
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
-		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
 		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
 		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
+		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
 		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
-		self.display = True
-		self.saveSnapShot = False
+		self.display = False
+		self.saveSnapShot = True
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
 		self.snapShotPath = os.path.abspath(os.path.join('..', 'model', 'snapShot'))
 

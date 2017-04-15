@@ -21,10 +21,10 @@ def default_boxes(out_shapes):
 		layer_boxes = []
 		layer_shape = out_shapes[o_i]
 		s_k = box_scale(o_i + 1)
-		for x in range(layer_shape[2]):
-			x_boxes = []
-			for y in range(layer_shape[1]):
-				y_boxes = []
+		for y in range(layer_shape[1]):
+			y_boxes = []
+			for x in range(layer_shape[2]):
+				x_boxes = []
 				rs = box_ratios
 				for i in range(len(rs)):
 					scale = s_k
@@ -32,11 +32,11 @@ def default_boxes(out_shapes):
 					default_h = scale / np.sqrt(rs[i])
 					c_x = (x + 0.5) / float(layer_shape[2])
 					c_y = (y + 0.5) / float(layer_shape[1])
-					y_boxes.append([c_x, c_y, default_w, default_h])
+					x_boxes.append([c_x, c_y, default_w, default_h])
 					c_y = (y + 1.0) / float(layer_shape[1])
-					y_boxes.append([c_x, c_y, default_w, default_h])
-				x_boxes.append(y_boxes)
-			layer_boxes.append(x_boxes)
+					x_boxes.append([c_x, c_y, default_w, default_h])
+				y_boxes.append(x_boxes)
+			layer_boxes.append(y_boxes)
 		boxes.append(layer_boxes)
 	return boxes
 # center -> corner
@@ -162,24 +162,24 @@ def format_output(softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_inde
 	index = 0
 	confidences = []
 	for layer in range(len(layer_boxes)):
-		for x in range(c.out_shapes[layer][2]):
-			for y in range(c.out_shapes[layer][1]):
+		for y in range(c.out_shapes[layer][1]):
+			for x in range(c.out_shapes[layer][2]):
 				for i in range(layer_boxes[layer]):
 					# convert output predicted location to center based box
 					diffs = pred_locs[index]
-					default = c.defaults[layer][x][y][i]
+					default = c.defaults[layer][y][x][i]
 					c_x = default[0] + default[2] * diffs[0]
 					c_y = default[1] + default[3] * diffs[1]
 					w = default[2] * np.exp(diffs[2])
 					h = default[3] * np.exp(diffs[3])
-					boxes[layer][x][y][i] = [c_x, c_y, w, h]
+					boxes[layer][y][x][i] = [c_x, c_y, w, h]
 					# convert output predicted label
 					# logits = pred_labels[index]
 					# max_logits = np.amax(np.exp(logits) / np.sum(np.exp(logits)))
 					# max_logits_label = np.argmax(logits)
 					max_logits = softmaxed_pred_labels_max_prob[index]
 					max_logits_label = softmaxed_pred_labels_max_index[index]
-					indices = [layer, x, y, i]
+					indices = [layer, y, x, i]
 					info = (indices, max_logits, max_logits_label)
 					confidences.append(info)
 					index += 1
@@ -193,7 +193,7 @@ def post_process(boxes, confidences, min_conf=0.01, nms=0.45):
 				raw_boxes.append(boxes[indices[0]][indices[1]][indices[2]][indices[3]])
 	raw_boxes = np.asarray(raw_boxes)
 	return non_max_suppression_fast(raw_boxes, nms)
-	return raw_boxes
+	# return raw_boxes
 
 def prepare_feed(matches):
 	positives_list = []
@@ -202,16 +202,16 @@ def prepare_feed(matches):
 	true_locs_list = []
 
 	for o in range(len(layer_boxes)):
-		for x in range(c.out_shapes[o][2]):
-			for y in range(c.out_shapes[o][1]):
+		for y in range(c.out_shapes[o][1]):
+			for x in range(c.out_shapes[o][2]):
 				for i in range(layer_boxes[o]):
-					match = matches[o][x][y][i]
+					match = matches[o][y][x][i]
 
 					if isinstance(match, tuple): # there is a ground truth assigned to this default box
 						positives_list.append(1)
 						negatives_list.append(0)
 						true_labels_list.append(match[1]) #id
-						default = c.defaults[o][x][y][i]
+						default = c.defaults[o][y][x][i]
 						true_locs_list.append(calc_offsets(default, corner2centerbox(match[0])))
 					elif match == -1: # this default box was chosen to be a negative
 						positives_list.append(0)
