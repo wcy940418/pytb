@@ -25,15 +25,15 @@ class Conf:
 		self.testInterval = 1000
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
-		# self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
-		# self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
-		self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
-		self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
+		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
+		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
+		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
+		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
 		self.display = True
 		self.saveSnapShot = False
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
 		self.snapShotPath = os.path.abspath(os.path.join('..', 'model', 'snapShot'))
-		self.pretrainedModel = os.path.abspath(os.path.join('..', 'model', 'pretrained', 'vgg16_weights.npz'))
+		self.pretrainedModel = os.path.abspath(os.path.join('..', 'model', 'pretrained', 'vgg_reduced_fc.npy'))
 		self.loadPretrained = True
 
 if __name__ == '__main__':
@@ -59,8 +59,8 @@ if __name__ == '__main__':
 	train_writer = tf.summary.FileWriter(gConfig.trainLogPath, sess.graph)
 	ckpt = utility.checkPointLoader(gConfig.modelDir)
 	box_matcher = Matcher()
-	train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
-	# train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
+	# train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
+	train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
 	def signal_handler(signal, frame):
 		print('You pressed Ctrl+C!')
 		tb.saveModel(gConfig.modelDir, step)

@@ -94,13 +94,25 @@ class TB:
 		savePath = saver.save(self.sess, os.path.join(save_path, "ckpt-%08d" % step))
 		print("Model saved at: %s" % savePath)
 		return savePath
+	# def loadWeights(self, weightFile):
+	# 	weights = np.load(weightFile)
+	# 	keys = sorted(weights.keys())
+	# 	for i in range(26):
+	# 		k = keys[i]
+	# 		print i, k, np.shape(weights[k])
+	# 		self.sess.run(self.parameters[i].assign(weights[k]))
 	def loadWeights(self, weightFile):
 		weights = np.load(weightFile)
-		keys = sorted(weights.keys())
-		for i in range(26):
-			k = keys[i]
-			print i, k, np.shape(weights[k])
-			self.sess.run(self.parameters[i].assign(weights[k]))
+		weights = weights.item()
+		layer_list = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1', 'conv3_2', \
+					  'conv3_3', 'conv4_1', 'conv4_2', 'conv4_3', 'conv5_1', 'conv5_2', \
+					  'conv5_3']
+		for i, layer in zip(range(len(layer_list)), layer_list):
+			weight = weights[layer]['weights']
+			bias = weights[layer]['biases']
+			print layer, weight.shape, bias.shape
+			self.sess.run(self.parameters[i * 2].assign(weight))
+			self.sess.run(self.parameters[i * 2 + 1].assign(bias))
 
 
 class TB_Loss():
