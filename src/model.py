@@ -10,6 +10,7 @@ class TB:
 		self.input = images
 		self.trainPhase = trainPhase
 		self.sess = sess
+		self.parameters = []
 		print("build model started")
 		start_time = time.time()
 		self.initialVGGLayers()
@@ -18,49 +19,49 @@ class TB:
 		print("build model finished: %ds" % (time.time() - start_time))
 
 	def initialVGGLayers(self):
-		with tf.name_scope('VGG16') as scope:
+		with tf.variable_scope('VGG16') as scope:
 			with tf.name_scope('preprocess') as scope:
 				images = tf.reshape(self.input, [-1, 300, 300, 3])
 				images = images * 255.0
 				mean = tf.constant([-103.939, -116.779, -123.68], dtype=tf.float32, shape=[1, 1, 1, 3], name='img_mean')
 				self.imgs = tf.add(images, mean)
 				tf.summary.image('input image', self.imgs, 3)
-			self.conv1_1 = bl.conv2d(self.imgs, 3, 64, name='conv1_1', freeze=True)#300
-			self.conv1_2 = bl.conv2d(self.conv1_1, 64, 64, name='conv1_2', freeze=True)#300
+			self.conv1_1 = bl.conv2d(self.imgs, 3, 64, name='conv1_1', trainable=False, parameters=self.parameters)#300
+			self.conv1_2 = bl.conv2d(self.conv1_1, 64, 64, name='conv1_2', trainable=False, parameters=self.parameters)#300
 			self.pool1 = bl.maxPool(self.conv1_2, name='pool1')#150
-			self.conv2_1 = bl.conv2d(self.pool1, 64, 128, name='conv2_1', freeze=True)#150
-			self.conv2_2 = bl.conv2d(self.conv2_1, 128, 128, name='conv2_2', freeze=True)#150
+			self.conv2_1 = bl.conv2d(self.pool1, 64, 128, name='conv2_1', trainable=False, parameters=self.parameters)#150
+			self.conv2_2 = bl.conv2d(self.conv2_1, 128, 128, name='conv2_2', trainable=False, parameters=self.parameters)#150
 			self.pool2 = bl.maxPool(self.conv2_2, name='pool2')#75
-			self.conv3_1 = bl.conv2d(self.pool2, 128, 256, name='conv3_1')#75
-			self.conv3_2 = bl.conv2d(self.conv3_1, 256, 256, name='conv3_2')#75
-			self.conv3_3 = bl.conv2d(self.conv3_2, 256, 256, name='conv3_3')#75
+			self.conv3_1 = bl.conv2d(self.pool2, 128, 256, name='conv3_1', parameters=self.parameters)#75
+			self.conv3_2 = bl.conv2d(self.conv3_1, 256, 256, name='conv3_2', parameters=self.parameters)#75
+			self.conv3_3 = bl.conv2d(self.conv3_2, 256, 256, name='conv3_3', parameters=self.parameters)#75
 			self.pool3 = bl.maxPool(self.conv3_3, name='pool3')#38
-			self.conv4_1 = bl.conv2d(self.pool3, 256, 512, name='conv4_1')#38
-			self.conv4_2 = bl.conv2d(self.conv4_1, 512, 512, name='conv4_2')#38
-			self.conv4_3 = bl.conv2d(self.conv4_2, 512, 512, name='conv4_3')#38
+			self.conv4_1 = bl.conv2d(self.pool3, 256, 512, name='conv4_1', parameters=self.parameters)#38
+			self.conv4_2 = bl.conv2d(self.conv4_1, 512, 512, name='conv4_2', parameters=self.parameters)#38
+			self.conv4_3 = bl.conv2d(self.conv4_2, 512, 512, name='conv4_3', parameters=self.parameters)#38
 			self.pool4 = bl.maxPool(self.conv4_3, name='pool4')#19
-			self.conv5_1 = bl.conv2d(self.pool4, 512, 512, name='conv5_1')#19
-			self.conv5_2 = bl.conv2d(self.conv5_1, 512, 512, name='conv5_2')#19
-			self.conv5_3 = bl.conv2d(self.conv5_2, 512, 512, name='conv5_3')#19
+			self.conv5_1 = bl.conv2d(self.pool4, 512, 512, name='conv5_1', parameters=self.parameters)#19
+			self.conv5_2 = bl.conv2d(self.conv5_1, 512, 512, name='conv5_2', parameters=self.parameters)#19
+			self.conv5_3 = bl.conv2d(self.conv5_2, 512, 512, name='conv5_3', parameters=self.parameters)#19
 			self.pool5 = bl.maxPool(self.conv5_3, stride=1, kernel=3, name='pool5')#19
-			self.conv6 = bl.conv2d(self.pool5, 512, 1024, name='conv6')#19
-			self.conv7 = bl.conv2d(self.conv6, 1024, 1024, kernel=[1,1], name='conv7')#19
-			self.conv8_1 = bl.conv2d(self.conv7, 1024, 256, kernel=[1,1], name='conv8_1')#19
-			self.conv8_2 = bl.conv2d(self.conv8_1, 256, 512, strides = [2, 2], name='conv8_2')#10
-			self.conv9_1 = bl.conv2d(self.conv8_2, 512, 128, kernel=[1,1], name='conv9_1')#10
-			self.conv9_2 = bl.conv2d(self.conv9_1, 128, 256, strides=[2,2], name='conv9_2')#5
-			self.conv10_1 = bl.conv2d(self.conv9_2, 256, 128, kernel=[1,1], name='conv10_1')#5
-			self.conv10_2 = bl.conv2d(self.conv10_1, 128, 256, strides=[2,2], name='conv10_2')#3
+			self.conv6 = bl.conv2d(self.pool5, 512, 1024, name='conv6', parameters=self.parameters)#19
+			self.conv7 = bl.conv2d(self.conv6, 1024, 1024, kernel=[1,1], name='conv7', parameters=self.parameters)#19
+			self.conv8_1 = bl.conv2d(self.conv7, 1024, 256, kernel=[1,1], name='conv8_1', parameters=self.parameters)#19
+			self.conv8_2 = bl.conv2d(self.conv8_1, 256, 512, strides = [2, 2], name='conv8_2', parameters=self.parameters)#10
+			self.conv9_1 = bl.conv2d(self.conv8_2, 512, 128, kernel=[1,1], name='conv9_1', parameters=self.parameters)#10
+			self.conv9_2 = bl.conv2d(self.conv9_1, 128, 256, strides=[2,2], name='conv9_2', parameters=self.parameters)#5
+			self.conv10_1 = bl.conv2d(self.conv9_2, 256, 128, kernel=[1,1], name='conv10_1', parameters=self.parameters)#5
+			self.conv10_2 = bl.conv2d(self.conv10_1, 128, 256, strides=[2,2], name='conv10_2', parameters=self.parameters)#3
 			self.pool6 = tf.nn.avg_pool(self.conv10_2, [1, 3, 3, 1], [1, 1, 1, 1], "VALID")#1
 	def initialTextBoxLayers(self):
-		with tf.name_scope('tb_extension') as scope:
+		with tf.variable_scope('tb_extension') as scope:
 			c_ = classes + 1
-			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1')
-			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[1] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2')
-			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[2] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3')
-			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[3] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4')
-			self.out5 = bl.conv2d(self.conv10_2, 256, layer_boxes[4] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out5')
-			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[5] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,1], name='out6')
+			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1', parameters=self.parameters)
+			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[1] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2', parameters=self.parameters)
+			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[2] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3', parameters=self.parameters)
+			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[3] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4', parameters=self.parameters)
+			self.out5 = bl.conv2d(self.conv10_2, 256, layer_boxes[4] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out5', parameters=self.parameters)
+			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[5] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,1], name='out6', parameters=self.parameters)
 	def initialOutputs(self):
 		c_ = classes + 1
 		outputs = [self.out1, self.out2, self.out3, self.out4, self.out5, self.out6]
@@ -93,6 +94,14 @@ class TB:
 		savePath = saver.save(self.sess, os.path.join(save_path, "ckpt-%08d" % step))
 		print("Model saved at: %s" % savePath)
 		return savePath
+	def loadWeights(self, weightFile):
+		weights = np.load(weightFile)
+		keys = sorted(weights.keys())
+		for i in range(26):
+			k = keys[i]
+			print i, k, np.shape(weights[k])
+			self.sess.run(self.parameters[i].assign(weights[k]))
+
 
 class TB_Loss():
 	def __init__(self, pred_labels, pred_locs, true_labels, true_locs, positives, negatives):

@@ -20,19 +20,21 @@ class Conf:
 		self.trainBatchSize = 8
 		self.testBatchSize = 2
 		self.maxIteration = 60000
-		self.displayInterval = 10
+		self.displayInterval = 1
 		self.evalInterval = 50
 		self.testInterval = 1000
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
-		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
-		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
-		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
-		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
-		self.display = False
-		self.saveSnapShot = True
+		# self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
+		# self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
+		self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
+		self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
+		self.display = True
+		self.saveSnapShot = False
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
 		self.snapShotPath = os.path.abspath(os.path.join('..', 'model', 'snapShot'))
+		self.pretrainedModel = os.path.abspath(os.path.join('..', 'model', 'pretrained', 'vgg16_weights.npz'))
+		self.loadPretrained = True
 
 if __name__ == '__main__':
 	gConfig = Conf()
@@ -57,8 +59,8 @@ if __name__ == '__main__':
 	train_writer = tf.summary.FileWriter(gConfig.trainLogPath, sess.graph)
 	ckpt = utility.checkPointLoader(gConfig.modelDir)
 	box_matcher = Matcher()
-	# train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
-	train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
+	train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
+	# train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
 	def signal_handler(signal, frame):
 		print('You pressed Ctrl+C!')
 		tb.saveModel(gConfig.modelDir, step)
@@ -70,6 +72,8 @@ if __name__ == '__main__':
 	if ckpt is None:
 		init = tf.global_variables_initializer()
 		sess.run(init)
+		if gConfig.loadPretrained:
+			tb.loadWeights(gConfig.pretrainedModel)
 		step = 0
 	else:
 		tb.loadModel(ckpt)
