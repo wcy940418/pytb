@@ -25,10 +25,10 @@ class Conf:
 		self.testInterval = 1000
 		self.saveInterval = 5000
 		self.modelDir = os.path.abspath(os.path.join('..', 'model', 'ckpt'))
-		self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
-		self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
-		# self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
-		# self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
+		# self.trainDataSet = os.path.join('..', 'data', 'SynthTextLmdb')
+		# self.auxTrainDataSet = os.path.join('..', 'data', 'SynthText')
+		self.trainDataSet = os.path.join('..', 'data', 'svt1', 'train.xml')
+		self.testDataSet = os.path.join('..', 'data', 'svt1', 'test.xml')
 		self.display = True
 		self.saveSnapShot = False
 		self.trainLogPath = os.path.abspath(os.path.join('..', 'model', 'train'))
@@ -59,8 +59,8 @@ if __name__ == '__main__':
 	train_writer = tf.summary.FileWriter(gConfig.trainLogPath, sess.graph)
 	ckpt = utility.checkPointLoader(gConfig.modelDir)
 	box_matcher = Matcher()
-	# train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
-	train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
+	train_loader = sLoader.SVT(gConfig.trainDataSet, gConfig.testDataSet)
+	# train_loader = dataset.SynthLmdb(gConfig.trainDataSet, gConfig.auxTrainDataSet)
 	def signal_handler(signal, frame):
 		print('You pressed Ctrl+C!')
 		tb.saveModel(gConfig.modelDir, step)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 			feed_dict={tb.input: imgs, tb.trainPhase: False})
 		batch_values = [None for i in range(gConfig.trainBatchSize)]
 		def build_match_boxes(batch, step, snapShotInterval):
-			matches = box_matcher.match_boxes(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], anns[batch])
+			matches = box_matcher.match_boxes_2(softmaxed_pred_labels_max_prob[batch], softmaxed_pred_labels_max_index[batch], anns[batch])
 			positives, negatives, tru_labels, true_locs = boxproc.prepare_feed(matches)
 			batch_values[batch] = (positives, negatives, tru_labels, true_locs)
 			if batch == 0 and gConfig.display:

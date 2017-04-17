@@ -7,6 +7,8 @@ classes = 1
 box_ratios = [1.0, 2.0, 3.0, 5.0, 7.0, 10.0]
 box_s_min = 0.1
 negposratio = 3
+overlap_threshold = 0.5
+neg_overlap = 0.5
 
 # to be set programmatically
 out_shapes = None
