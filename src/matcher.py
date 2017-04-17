@@ -80,19 +80,27 @@ class Matcher:
 	def match_boxes_2(self, softmaxed_pred_labels_max_prob, softmaxed_pred_labels_max_index, anns):
 		matches = [[[[None for i in range(c.layer_boxes[o])] for x in range(c.out_shapes[o][2])] for y in range(c.out_shapes[o][1])] for o in range(len(layer_boxes))]
 		positive_count = 0
-		for o in range(len(layer_boxes)):
-			for y in range(c.out_shapes[o][1]):
-				for x in range(c.out_shapes[o][2]):
-					for i in range(c.layer_boxes[0]):
-						for index, (gt_box, box_id) in zip(range(len(anns)), anns):
+		for index, (gt_box, box_id) in zip(range(len(anns)), anns):
+			top_match = (None, 0)
+			for o in range(len(layer_boxes)):
+				for y in range(c.out_shapes[o][1]):
+					for x in range(c.out_shapes[o][2]):
+						for i in range(c.layer_boxes[0]):
 							box = c.defaults[o][y][x][i]
 							jacc = calc_jaccard(gt_box, center2cornerbox(box))
 							overlap = calc_overlap(center2cornerbox(box), gt_box)
 							if jacc >= overlap_threshold:
 								matches[o][y][x][i] = (gt_box, box_id)
 								positive_count += 1
+							if jacc > top_match[1]:
+								top_match = ([o, y, x, i], jacc)
 							elif overlap < neg_overlap:
 								matches[o][y][x][i] = 1
+			top_box = top_match[0]
+			#if box's jaccard is <0.5 but is the best
+			if top_box is not None and matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]] is None:
+				positive_count += 1
+				matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]] = (gt_box, box_id)
 		negative_max = positive_count * negposratio
 		negative_count = 0
 
