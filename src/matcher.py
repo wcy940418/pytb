@@ -99,7 +99,7 @@ class Matcher:
 							
 			top_box = top_match[0]
 			#if box's jaccard is <0.5 but is the best
-			if top_box is not None and matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]] is None:
+			if top_box is not None and not isinstance(matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]], tuple):
 				positive_count += 1
 				matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]] = (gt_box, box_id)
 		negative_max = positive_count * negposratio
