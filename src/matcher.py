@@ -89,13 +89,14 @@ class Matcher:
 							box = c.defaults[o][y][x][i]
 							jacc = calc_jaccard(gt_box, center2cornerbox(box))
 							overlap = calc_overlap(center2cornerbox(box), gt_box)
+							if jacc > top_match[1]:
+								top_match = ([o, y, x, i], jacc)
 							if jacc >= overlap_threshold:
 								matches[o][y][x][i] = (gt_box, box_id)
 								positive_count += 1
-							if jacc > top_match[1]:
-								top_match = ([o, y, x, i], jacc)
 							elif overlap < neg_overlap:
 								matches[o][y][x][i] = 1
+							
 			top_box = top_match[0]
 			#if box's jaccard is <0.5 but is the best
 			if top_box is not None and matches[top_box[0]][top_box[1]][top_box[2]][top_box[3]] is None:
