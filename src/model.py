@@ -126,10 +126,10 @@ class TB_Loss():
 		posandnegs = tf.add(self.positives, self.negatives)
 		positive_sum = tf.reduce_sum(self.positives, reduction_indices=1)
 		class_loss = tf.multiply(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.pred_labels, labels=self.true_labels), posandnegs)
-		class_loss = tf.reduce_sum(class_loss, reduction_indices=1)
+		class_loss = tf.reduce_sum(class_loss, reduction_indices=1) / (1e-5 + tf.reduce_sum(posandnegs, reduction_indices=1))
 		loc_loss = tf.multiply(tf.reduce_sum(smooth_l1(self.pred_locs - self.true_locs), reduction_indices=2), positives)
-		loc_loss = tf.reduce_sum(loc_loss, reduction_indices=1)
-		total_loss = (class_loss + loc_loss) / positive_sum
+		loc_loss = tf.reduce_sum(loc_loss, reduction_indices=1) / (1e-5 + tf.reduce_sum(positives, reduction_indices=1))
+		total_loss = class_loss + 1.0 * loc_loss
 		condition = tf.equal(positive_sum, 0)
 		total_loss_wo_inf = tf.where(condition, positive_sum, total_loss)
 		self.total_loss = tf.reduce_mean(total_loss_wo_inf)
