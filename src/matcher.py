@@ -94,7 +94,7 @@ class Matcher:
 							if jacc >= overlap_threshold:
 								matches[o][y][x][i] = (gt_box, box_id)
 								positive_count += 1
-							elif overlap < neg_overlap:
+							elif overlap < neg_overlap and matches[o][y][x][i] is None:
 								matches[o][y][x][i] = 1
 							
 			top_box = top_match[0]

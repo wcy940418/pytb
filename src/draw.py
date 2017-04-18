@@ -14,21 +14,29 @@ def draw_rect(image, rectangle, color, thickness=1):
 	right_bottom = (int((rectangle[0] + max(rectangle[2], 0)) * image.shape[1]), int((rectangle[1] + max(rectangle[3], 0)) * image.shape[0]))
 	cv2.rectangle(image, left_top, right_bottom, color, thickness)
 
-def draw_output(image, boxes, confidences, wait=1000, mode='display', step=0, path=None):
+def draw_output(image, boxes, confidences, wait=50, mode='display', step=0, path=None):
 	img = (image * 255.0).astype(np.uint8)
-	picks = boxproc.post_process(boxes, confidences)
+	img2 = img.copy()
+	raw_picks, picks = boxproc.post_process(boxes, confidences)
 	color_r = (0, 0, 255)
 	for box in picks:
 		draw_rect(img, box, color_r, 1)
+	for box in raw_picks:
+		draw_rect(img2, box, color_r, 1)
 	if mode == 'display':
-		cv2.imshow("outputs", img)
+		cv2.imshow("output", img)
+		cv2.waitKey(wait)
+		cv2.imshow("raw_output", img2)
 		cv2.waitKey(wait)
 	elif mode == 'save':
 		write_path = os.path.join(path, str(step) + '_output.jpg')
 		# print write_path
 		cv2.imwrite(write_path, img)
+		write_path = os.path.join(path, str(step) + '_raw_output.jpg')
+		# print write_path
+		cv2.imwrite(write_path, img2)
 
-def draw_matches(image, default_boxes, matches, anns, wait=1000, mode='display', step=0, path=None):
+def draw_matches(image, default_boxes, matches, anns, wait=50, mode='display', step=0, path=None):
 	img = (image * 255.0).astype(np.uint8)
 	color_r = (0, 0, 255)
 	color_b = (255, 0, 0)
