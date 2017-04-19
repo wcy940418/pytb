@@ -44,24 +44,34 @@ class TB:
 			self.conv5_2 = bl.conv2d(self.conv5_1, 512, 512, name='conv5_2', parameters=self.parameters)#19
 			self.conv5_3 = bl.conv2d(self.conv5_2, 512, 512, name='conv5_3', parameters=self.parameters)#19
 			self.pool5 = bl.maxPool(self.conv5_3, stride=1, kernel=3, name='pool5')#19
-			self.conv6 = bl.conv2d(self.pool5, 512, 1024, name='conv6', parameters=self.parameters)#19
-			self.conv7 = bl.conv2d(self.conv6, 1024, 1024, kernel=[1,1], name='conv7', parameters=self.parameters)#19
-			self.conv8_1 = bl.conv2d(self.conv7, 1024, 256, kernel=[1,1], name='conv8_1', parameters=self.parameters)#19
-			self.conv8_2 = bl.conv2d(self.conv8_1, 256, 512, strides = [2, 2], name='conv8_2', parameters=self.parameters)#10
-			self.conv9_1 = bl.conv2d(self.conv8_2, 512, 128, kernel=[1,1], name='conv9_1', parameters=self.parameters)#10
-			self.conv9_2 = bl.conv2d(self.conv9_1, 128, 256, strides=[2,2], name='conv9_2', parameters=self.parameters)#5
-			self.conv10_1 = bl.conv2d(self.conv9_2, 256, 128, kernel=[1,1], name='conv10_1', parameters=self.parameters)#5
-			self.conv10_2 = bl.conv2d(self.conv10_1, 128, 256, strides=[2,2], name='conv10_2', parameters=self.parameters)#3
-			self.pool6 = tf.nn.avg_pool(self.conv10_2, [1, 3, 3, 1], [1, 1, 1, 1], "VALID")#1
+			self.fc6 = bl.conv2d(self.pool5, 512, 1024, name='fc6', parameters=self.parameters)#19
+			self.fc7 = bl.conv2d(self.fc6, 1024, 1024, kernel=[1,1], name='fc7', parameters=self.parameters)#19
+			self.conv6_1 = bl.conv2d(self.fc7, 1024, 256, kernel=[1,1], name='conv6_1', parameters=self.parameters)#19
+			self.conv6_2 = bl.conv2d(self.conv6_1, 256, 512, strides = [2, 2], name='conv6_2', parameters=self.parameters)#10
+			self.conv7_1 = bl.conv2d(self.conv6_2, 512, 128, kernel=[1,1], name='conv7_1', parameters=self.parameters)#10
+			self.conv7_2 = bl.conv2d(self.conv7_1, 128, 256, strides=[2,2], name='conv7_2', parameters=self.parameters)#5
+			self.conv8_1 = bl.conv2d(self.conv7_2, 256, 128, kernel=[1,1], name='conv8_1', parameters=self.parameters)#5
+			self.conv8_2 = bl.conv2d(self.conv8_1, 128, 256, strides=[2,2], name='conv8_2', parameters=self.parameters)#3
+			globalPoolingH = self.conv8_2.get_shape().as_list()[1]
+			globalPoolingW = self.conv8_2.get_shape().as_list()[2]
+			globalPoolingSize = [globalPoolingH, globalPoolingW]
+			self.pool6 = tf.layers.average_pooling2d(self.conv8_2, globalPoolingSize, globalPoolingSize, "valid")#1
 	def initialTextBoxLayers(self):
 		with tf.variable_scope('tb_extension') as scope:
 			c_ = classes + 1
-			self.out1 = bl.conv2d(self.conv4_3, 512, layer_boxes[0] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out1', parameters=self.parameters)
-			self.out2 = bl.conv2d(self.conv7, 1024, layer_boxes[1] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out2', parameters=self.parameters)
-			self.out3 = bl.conv2d(self.conv8_2, 512, layer_boxes[2] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out3', parameters=self.parameters)
-			self.out4 = bl.conv2d(self.conv9_2, 256, layer_boxes[3] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out4', parameters=self.parameters)
-			self.out5 = bl.conv2d(self.conv10_2, 256, layer_boxes[4] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,5], name='out5', parameters=self.parameters)
-			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[5] * (c_ + 4), bn=True, trainPhase=self.trainPhase, kernel=[1,1], name='out6', parameters=self.parameters)
+			self.conv4_3_norm = tf.layers.batch_normalization(self.conv4_3, center=True, training=self.trainPhase)
+			self.conv4_3_norm_mbox_loc = bl.conv2d(self.conv4_3_norm, 512, layer_boxes[0] * c_ , kernel=[1,5], name='conv4_3_norm_mbox_loc', parameters=self.parameters)
+			self.fc7_mbox_loc = bl.conv2d(self.fc7, 1024, layer_boxes[1] * c_ , kernel=[1,5], name='fc7_mbox_loc', parameters=self.parameters)
+			self.conv6_2_mbox_loc = bl.conv2d(self.conv6_2, 512, layer_boxes[2] * c_ , kernel=[1,5], name='conv6_2_mbox_loc', parameters=self.parameters)
+			self.conv7_2_mbox_loc = bl.conv2d(self.conv7_2, 256, layer_boxes[3] * c_ , kernel=[1,5], name='conv7_2_mbox_loc', parameters=self.parameters)
+			self.conv8_2_mbox_loc = bl.conv2d(self.conv8_2, 256, layer_boxes[4] * c_ , kernel=[1,5], name='conv8_2_mbox_loc', parameters=self.parameters)
+			self.pool6_mbox_loc = bl.conv2d(self.pool6, 256, layer_boxes[5] * c_ , kernel=[1,1], name='pool6_mbox_loc', parameters=self.parameters)
+			self.out1 = bl.conv2d(self.conv4_3_norm, 512, layer_boxes[0] * 4, kernel=[1,5], name='out1', parameters=self.parameters)
+			self.out2 = bl.conv2d(self.fc7, 1024, layer_boxes[1] * 4, kernel=[1,5], name='out2', parameters=self.parameters)
+			self.out3 = bl.conv2d(self.conv6_2, 512, layer_boxes[2] * 4, kernel=[1,5], name='out3', parameters=self.parameters)
+			self.out4 = bl.conv2d(self.conv7_2, 256, layer_boxes[3] * 4, kernel=[1,5], name='out4', parameters=self.parameters)
+			self.out5 = bl.conv2d(self.conv8_2, 256, layer_boxes[4] * 4, kernel=[1,5], name='out5', parameters=self.parameters)
+			self.out6 = bl.conv2d(self.pool6, 256, layer_boxes[5] * 4, kernel=[1,1], name='out6', parameters=self.parameters)
 	def initialOutputs(self):
 		c_ = classes + 1
 		outputs = [self.out1, self.out2, self.out3, self.out4, self.out5, self.out6]
